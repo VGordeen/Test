@@ -1,0 +1,52 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class SimpleHttpDirectoryLister {
+    public static void main(String[] args) {
+        String dirUrl = "http://example.com/files/"; // URL директории с листингом
+        
+        try {
+            List<String> files = listFilesFromUrl(dirUrl);
+            System.out.println("Файлы в директории:");
+            files.forEach(System.out::println);
+        } catch (IOException e) {
+            System.err.println("Ошибка: " + e.getMessage());
+        }
+    }
+
+    public static List<String> listFilesFromUrl(String dirUrl) throws IOException {
+        List<String> files = new ArrayList<>();
+        URL url = new URL(dirUrl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+
+        if (conn.getResponseCode() == 200) { // HTTP OK
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream()))) {
+                String line;
+                // Регулярное выражение для поиска ссылок в HTML (очень упрощённое!)
+                Pattern pattern = Pattern.compile("<a href=\"([^\"]+)\">([^<]+)</a>");
+                while ((line = reader.readLine()) != null) {
+                    Matcher matcher = pattern.matcher(line);
+                    if (matcher.find()) {
+                        String fileName = matcher.group(1);
+                        if (!fileName.equals("../") && !fileName.startsWith("?")) {
+                            files.add(fileName);
+                        }
+                    }
+                }
+            }
+        } else {
+            throw new IOException("HTTP-ошибка: " + conn.getResponseCode());
+        }
+        conn.disconnect();
+        return files;
+    }
+}
