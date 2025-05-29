@@ -77,3 +77,79 @@ public class HttpDirectoryLister {
         }
     }
 }
+
+
+import javax.sound.midi.*;
+import java.util.*;
+
+public class FurElise {
+    public static void main(String[] args) throws MidiUnavailableException, InterruptedException {
+        Synthesizer synth = MidiSystem.getSynthesizer();
+        synth.open();
+        
+        MidiChannel melody = synth.getChannels()[0];
+        MidiChannel accompaniment = synth.getChannels()[1];
+        
+        melody.programChange(0);  // Рояль
+        accompaniment.programChange(0);
+        
+        int tempo = 180; // Скорость (можно менять)
+        int pedalTime = 300; // Длительность педали
+
+        // Главная тема (часть A)
+        int[][] themeA = {
+            {76, 1}, {75, 1},                        // E - D#
+            {76, 1}, {75, 1}, {76, 1}, {71, 1},      // E - D# - E - B
+            {69, 1}, {68, 1}, {64, 2},               // A - G# - E
+            {72, 1}, {71, 1}, {67, 1}, {64, 1},      // C - B - G - E
+            {64, 1}, {68, 1}, {69, 2}                // E - G - A
+        };
+
+        // Вариация (часть B)
+        int[][] themeB = {
+            {72, 1}, {71, 1}, {72, 1}, {71, 1},      // C - B - C - B
+            {72, 1}, {76, 1}, {84, 1}, {76, 1},       // C - E - C (верх) - E
+            {72, 1}, {71, 1}, {69, 1}, {71, 1},      // C - B - A - B
+            {72, 4}                                   // C (долгая)
+        };
+
+        // Воспроизведение с педалью
+        System.out.println(" ♪ Начинаем 'К Элизе'... ♫ ");
+        
+        // Часть A (2 раза)
+        playSection(melody, accompaniment, themeA, tempo, pedalTime);
+        playSection(melody, accompaniment, themeA, tempo, pedalTime);
+        
+        // Часть B
+        playSection(melody, accompaniment, themeB, tempo, pedalTime);
+        
+        // Часть A (финал)
+        playSection(melody, accompaniment, themeA, tempo, pedalTime);
+        
+        synth.close();
+        System.out.println(" ♬ Конец! Лунный свет и романтика... 🌙");
+    }
+    
+    private static void playSection(MidiChannel melody, MidiChannel accompaniment, 
+                                  int[][] notes, int tempo, int pedalTime) 
+                                  throws InterruptedException {
+        for (int[] note : notes) {
+            melody.noteOn(note[0], 90); // Громкость 90
+            accompaniment.noteOn(note[0] - 12, 40); // Аккорды на октаву ниже
+            
+            // Педаль (контроллер 64)
+            melody.controlChange(64, 127); 
+            
+            Thread.sleep(tempo * note[1]);
+            
+            melody.noteOff(note[0]);
+            accompaniment.noteOff(note[0] - 12);
+            
+            // Отпускаем педаль иногда для четкости
+            if (note[1] >= 2) {
+                melody.controlChange(64, 0);
+                Thread.sleep(50);
+            }
+        }
+    }
+}
