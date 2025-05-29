@@ -50,3 +50,30 @@ public class SimpleHttpDirectoryLister {
         return files;
     }
 }
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import java.io.IOException;
+
+public class HttpDirectoryLister {
+    public static void main(String[] args) {
+        String serverUrl = "http://example.com/files/";  // URL папки с листингом
+
+        try {
+            Document doc = Jsoup.connect(serverUrl).get();
+            Elements links = doc.select("a[href]");  // Все ссылки на странице
+
+            System.out.println("Файлы в директории:");
+            for (Element link : links) {
+                String href = link.attr("href");
+                if (!href.equals("../") && !href.startsWith("?")) {
+                    System.out.println(href);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Ошибка при получении списка файлов: " + e.getMessage());
+        }
+    }
+}
